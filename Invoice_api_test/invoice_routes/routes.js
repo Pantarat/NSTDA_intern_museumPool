@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
-const app = express();
+const t = require('../table_values/values');
 
+console.log(t.table)
 const dbCon = mysql.createConnection({
     host: 'localhost',
     user: 'Zake',
@@ -42,7 +43,7 @@ router.post('', (req,res) => {
     }
     if(err) return res.status(400).send({ error: true, message: errmsg })
     else{
-        dbCon.query("INSERT INTO good_invoices (invoice_number,client_id,client_name,invoice_total,payment_total) VALUES (?,?,?,?,?)",[newinv_number,newinv_client_id,newinv_client_name,newinv_total,newinv_payment], (error,results,fields) => {
+        dbCon.query(`INSERT INTO good_invoices (invoice_number,client_id,client_name,invoice_total,payment_total) VALUES (?,?,?,?,?)`,[newinv_number,newinv_client_id,newinv_client_name,newinv_total,newinv_payment], (error,results,fields) => {
             if (error) throw error;
             res.send({ error: false, data: results, message: 'New invoice succesfully added'});
         })
@@ -51,9 +52,12 @@ router.post('', (req,res) => {
 
 //read all invoices
 router.get('', (req,res) => {
-    dbCon.query('SELECT * FROM good_invoices', (error,results,fields) => {
+    dbCon.query(`SELECT * FROM ${t.table}`, (error,results,fields) => {
         if (error) throw error;
         res.send({ error: false, data: results, message: 'Succesfully retrieved all invoices'});
+        console.log(results);
+        //console.log(error);
+        //console.log(fields);
     })
 })
 
@@ -65,7 +69,7 @@ router.get('/:id', (req,res) => {
     if(!id){
         return res.status(400).send({ error: true, message: 'ID not found'})
     }else{
-        dbCon.query('SELECT * FROM good_invoices WHERE invoice_id = ?',id, (error,results,fields) => {
+        dbCon.query(`SELECT * FROM ${t.table} WHERE invoice_id = ${id}`, (error,results,fields) => {
             if(error) throw error;
 
             let msg = "";
@@ -113,7 +117,7 @@ router.put('/:id', (req,res) => {
     }
     if(err) return res.status(400).send({ error: true, message: errmsg })
     else{
-        dbCon.query('UPDATE good_invoices SET invoice_number = ?, client_id = ?, client_name = ?, invoice_total = ?, payment_total = ? WHERE invoice_id = ?',[newinv_number,newinv_client_id,newinv_client_name,newinv_total,newinv_payment,id], (error,results,fields) =>{
+        dbCon.query(`UPDATE ${t.table} SET invoice_number = ?, client_id = ?, client_name = ?, invoice_total = ?, payment_total = ? WHERE invoice_id = ?`,[newinv_number,newinv_client_id,newinv_client_name,newinv_total,newinv_payment,id], (error,results,fields) =>{
             if (error) throw error;
             let msg = "";
             if(results === undefined || results.length == 0){
@@ -133,7 +137,7 @@ router.delete('', (req,res) => {
     if(!id){
         return res.status(400).send({ error: true, message: 'ID not found'})
     }else{
-        dbCon.query('DELETE FROM good_invoices WHERE invoice_id = ?',id, (error,results,fields) => {
+        dbCon.query(`DELETE FROM t.table WHERE invoice_id = ?`,id, (error,results,fields) => {
             if(error) throw error;
             if(results === undefined || results.length == 0){
                 msg = `No Invoice of id ${id}`;
