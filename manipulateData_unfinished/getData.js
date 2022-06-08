@@ -29,18 +29,32 @@ function getAllData(table){
     })
 }
 
+function getDataArray(table,columns){
+    return new Promise((resolve,reject) => {
+        let queryString = 'SELECT ' + columns + 'FROM ' + connectionProp.database + '.' + table;
+        dbCon.query(queryString, (error,results,fields) => {
+            if (error){
+                reject(error);
+            }else {
+                resolve(results);
+            }
+        })    
+    }) 
+}
+
 async function logAllData(table_name) {
     console.log(await getAllData(table_name));
 }
 
 function getColumnArrayOfData(table,columns){
     return new Promise((resolve,reject) => {
-        let queryString = 'SELECT ' + columns + ' FROM ' + connectionProp.database + '.' + table;
+        let queryString = 'SELECT ' + columns + ' FROM ' + connectionProp.database + '.' + table + ' LIMIT 5';
         dbCon.query(queryString, (error,results,fields) => {
             if (error){
                 reject(error);
             }else {
-                resolve(results);
+                
+                resolve(JSON.parse(JSON.stringify(results)));
             }
         })    
     })

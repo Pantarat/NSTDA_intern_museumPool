@@ -16,9 +16,21 @@ function makeConnection(host, user, password, database){
     dbCon.connect();
 }
 
-//?
+
+function writeColumn(table,columns,data){
+    dataStr = data.map(row=> Object.values(row));
+    queryString = `INSERT INTO ${connectionProp.database}.${table} (${columns}) VALUES ?`;
+    dbCon.query(queryString,[dataStr], (error,results,fields) => {
+        if(error) throw error;
+        else{
+            console.log(results);
+            console.log('Data written succesfully');
+        }
+    });
+}
 
 let writeData = {};
 writeData.makeConnection = makeConnection;
+writeData.writeColumn = writeColumn;
 
 module.exports = writeData;
