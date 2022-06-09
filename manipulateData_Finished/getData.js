@@ -7,13 +7,18 @@ connectionProp.password = '';
 connectionProp.database = '';
 var dbCon;
 
-function makeConnection(host, user, password, database){
+//parameter is array for easy code use
+function makeConnection([host, user, password, database]){
     connectionProp.host = host;
     connectionProp.user = user;
     connectionProp.password = password;
     connectionProp.database = database;
     dbCon = mysql.createConnection(connectionProp);
     dbCon.connect();
+}
+
+function endConnection(){
+    dbCon.end();
 }
 
 function getAllData(table){
@@ -23,23 +28,10 @@ function getAllData(table){
             if (error){
                 reject(error);
             }else {
-                resolve(results);
+                resolve(JSON.parse(JSON.stringify(results)));
             }
         })    
     })
-}
-
-function getDataArray(table,columns){
-    return new Promise((resolve,reject) => {
-        let queryString = 'SELECT ' + columns + 'FROM ' + connectionProp.database + '.' + table;
-        dbCon.query(queryString, (error,results,fields) => {
-            if (error){
-                reject(error);
-            }else {
-                resolve(results);
-            }
-        })    
-    }) 
 }
 
 async function logAllData(table_name) {
@@ -48,7 +40,7 @@ async function logAllData(table_name) {
 
 function getColumnArrayOfData(table,columns){
     return new Promise((resolve,reject) => {
-        let queryString = 'SELECT ' + columns + ' FROM ' + connectionProp.database + '.' + table + ' LIMIT 5';
+        let queryString = 'SELECT ' + columns + ' FROM ' + connectionProp.database + '.' + table + '';
         dbCon.query(queryString, (error,results,fields) => {
             if (error){
                 reject(error);
@@ -71,5 +63,6 @@ getData.getAllData = getAllData;
 getData.logAllData = logAllData;
 getData.getColumnArrayOfData = getColumnArrayOfData;
 getData.logDataByColumn = logDataByColumn;
+getData.endConnection = endConnection;
 
 module.exports = getData;
