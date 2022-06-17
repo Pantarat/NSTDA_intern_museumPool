@@ -1,48 +1,27 @@
+const {dbReadCon: dbReadCon, dbWriteCon: dbWriteCon} = require('../config/db')
 const mysql = require("mysql");
 
-var readConnectionProp = {};
-var writeConnectionProp = {};
-var dbConRead;
-var dbConWrite;
-//parameter is array for easy code use
-function makeReadConnection([host, user, password, database]) {
-    readConnectionProp.host = host;
-    readConnectionProp.user = user;
-    readConnectionProp.password = password;
-    readConnectionProp.database = database;
-    dbConRead = mysql.createConnection(readConnectionProp);
-    dbConRead.connect();
-}
-
-function makeWriteConnection([host, user, password, database]) {
-    writeConnectionProp.host = host;
-    writeConnectionProp.user = user;
-    writeConnectionProp.password = password;
-    writeConnectionProp.database = database;
-    dbConWrite = mysql.createConnection(writeConnectionProp);
-    dbConWrite.connect();
-}
-
 function endReadConnection() {
-    dbConRead.end();
+    dbReadCon.end();
 }
 
 function endWriteConnection() {
-    dbConWrite.end();
+    dbReadCon.end();
 }
 
 //READ
-function getAllData(table, condition = "", limit = 0) {
+//getAllData('name_Of_Table','id = 5',10) return array of json data where json key is column name
+async function getAllData(table, condition = "", limit = 0) {
     return new Promise((resolve, reject) => {
         let queryString =
-            "SELECT * FROM " + readConnectionProp.database + "." + table;
+            "SELECT * FROM " + table;
         if (condition) {
             queryString += " WHERE " + condition;
         }
         if (limit > 0) {
             queryString += " LIMIT " + limit;
         }
-        dbConRead.query(queryString, (error, results, fields) => {
+        dbReadCon.query(queryString, (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
@@ -52,26 +31,24 @@ function getAllData(table, condition = "", limit = 0) {
     });
 }
 
+//displays all data from table
 async function logAllData(table_name) {
     console.log(await getAllData(table_name));
 }
 
-function getColumnArrayOfData(table, columns, condition = "", limit = 0) {
+//return array of json data based on column where json key is column name
+//getColumnArrayOfData('name_Of_Table',[column1,column2],id > 20, 5)
+async function getColumnArrayOfData(table, columns, condition = "", limit = 0) {
     return new Promise((resolve, reject) => {
         let queryString =
-            "SELECT " +
-            columns +
-            " FROM " +
-            readConnectionProp.database +
-            "." +
-            table;
+            "SELECT " + columns + " FROM " + table;
         if (condition) {
             queryString += " WHERE " + condition;
         }
         if (limit > 0) {
             queryString += " LIMIT " + limit;
         }
-        dbConRead.query(queryString, (error, results, fields) => {
+        dbReadCon.query(queryString, (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
@@ -81,12 +58,15 @@ function getColumnArrayOfData(table, columns, condition = "", limit = 0) {
     });
 }
 
+//displays data based on column
+//getColumnArrayOfData('name_Of_Table',[column1,column2],id > 20, 5)
 async function logDataByColumn(table, columns, condition = "") {
     console.log(await getColumnArrayOfData(table, columns, condition));
 }
 
 //WRITE
-function writeColumn(table, columns, data) {
+//writeColumn('name_Of_Table',[column1,column2], [ {column1:value1 , column2:value2} , {...} , ... ] )
+async function writeColumn(table, columns, data) {
     let dataStr = data.map((row) => Object.values(row));
     let updateStr = "";
     for (i = 0; i < columns.length; i++) {
@@ -96,9 +76,9 @@ function writeColumn(table, columns, data) {
     updateStr = updateStr.slice(0, -2);
 
     queryString =
-        `INSERT INTO ${writeConnectionProp.database}.${table} (${columns}) VALUES ? ON DUPLICATE KEY UPDATE ` +
+        `INSERT INTO ${table} (${columns}) VALUES ? ON DUPLICATE KEY UPDATE ` +
         updateStr;
-    dbConWrite.query(queryString, [dataStr], (error, results, fields) => {
+    dbWriteCon.query(queryString, [dataStr], (error, results, fields) => {
         if (error) throw error;
         else {
             console.log("Data written succesfully");
@@ -107,14 +87,12 @@ function writeColumn(table, columns, data) {
 }
 
 let mysql_tools = {};
-mysql_tools.makeReadConnection = makeReadConnection;
 mysql_tools.endReadConnection = endReadConnection;
 mysql_tools.getAllData = getAllData;
 mysql_tools.getColumnArrayOfData = getColumnArrayOfData;
 mysql_tools.logAllData = logAllData;
 mysql_tools.logDataByColumn = logDataByColumn;
 mysql_tools.writeColumn = writeColumn;
-mysql_tools.makeWriteConnection = makeWriteConnection;
 mysql_tools.endWriteConnection = endWriteConnection;
 
 module.exports = mysql_tools;
