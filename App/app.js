@@ -19,7 +19,22 @@ app.set('view engine','ejs')
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+//set cookie parser and flash
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const flash = require('connect-flash');
+app.use(cookieParser('SecretStringForCookies'));
+app.use(session({
+  secret : 'SecretStringForCookies',
+  cookie: {maxAge: 60000},
+  resave: true,
+  saveUninitialized: true
+}))
+app.use(flash());
+
+
 var insertRouter = require('./routes/insert');
+
 app.use('/insert',insertRouter)
 
 app.get("",(req,res)=>{

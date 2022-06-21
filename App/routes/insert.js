@@ -4,6 +4,7 @@ const inserter = require('../controllers/inserter');
 
 //main
 router.get('/',inserter.main);
+
 //single value
 router.get('/insert_form',inserter.insert_form);
 
