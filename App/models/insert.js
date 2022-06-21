@@ -1,4 +1,4 @@
-const dbCon = require('../config/db').dbWriteCon;
+const dbCon = require('../config/db').dbupdCon;
 const tool = require('./writeTo_newDatabase')
 module.exports ={
     insert_one_model : function(req) {
@@ -7,7 +7,7 @@ module.exports ={
         let ID = Object.values(info)[0];
         let Date = Object.values(info)[1];
             
-        dbCon.query(`INSERT INTO visitorlog (Visitor_ID,VisitorLog_UpdDate) VALUES (?,?)`,[ID,Date], (error,results,fields) => {
+        dbCon.query(`INSERT INTO visitor_log (Visitor_ID,VisitorLog_UpdDate) VALUES (?,?)`,[ID,Date], (error,results,fields) => {
             if (error) throw error;
         })
         

@@ -1,12 +1,12 @@
-const {dbReadCon: dbReadCon, dbWriteCon: dbWriteCon} = require('../config/db')
+const {dbogCon: dbogCon, dbupdCon: dbupdCon} = require('../config/db')
 const mysql = require("mysql");
 
-function endReadConnection() {
-    dbReadCon.end();
+function endOriginalConnection() {
+    dbogCon.end();
 }
 
-function endWriteConnection() {
-    dbReadCon.end();
+function endUpdatedConnection() {
+    dbupdCon.end();
 }
 
 //READ
@@ -21,7 +21,7 @@ async function getAllData(table, condition = "", limit = 0) {
         if (limit > 0) {
             queryString += " LIMIT " + limit;
         }
-        dbReadCon.query(queryString, (error, results, fields) => {
+        dbupdCon.query(queryString, (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
@@ -48,7 +48,7 @@ async function getColumnArrayOfData(table, columns, condition = "", limit = 0) {
         if (limit > 0) {
             queryString += " LIMIT " + limit;
         }
-        dbReadCon.query(queryString, (error, results, fields) => {
+        dbogCon.query(queryString, (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
@@ -78,7 +78,7 @@ async function writeColumn(table, columns, data) {
     queryString =
         `INSERT INTO ${table} (${columns}) VALUES ? ON DUPLICATE KEY UPDATE ` +
         updateStr;
-    dbWriteCon.query(queryString, [dataStr], (error, results, fields) => {
+    dbupdCon.query(queryString, [dataStr], (error, results, fields) => {
         if (error) throw error;
         else {
             console.log("Data written succesfully");
@@ -86,13 +86,34 @@ async function writeColumn(table, columns, data) {
     });
 }
 
+async function readColumnArrayOfUpdatedData(table, columns, condition = "", limit = 0) {
+    return new Promise((resolve, reject) => {
+        let queryString =
+            "SELECT " + columns + " FROM " + table;
+        if (condition) {
+            queryString += " WHERE " + condition;
+        }
+        if (limit > 0) {
+            queryString += " LIMIT " + limit;
+        }
+        dbupdCon.query(queryString, (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(JSON.parse(JSON.stringify(results)));
+            }
+        });
+    });
+}
+
 let mysql_tools = {};
-mysql_tools.endReadConnection = endReadConnection;
+mysql_tools.endOrignalConnection = endOriginalConnection;
 mysql_tools.getAllData = getAllData;
 mysql_tools.getColumnArrayOfData = getColumnArrayOfData;
 mysql_tools.logAllData = logAllData;
 mysql_tools.logDataByColumn = logDataByColumn;
 mysql_tools.writeColumn = writeColumn;
-mysql_tools.endWriteConnection = endWriteConnection;
+mysql_tools.endUpdatedConnection = endUpdatedConnection;
+mysql_tools.readColumnArrayOfUpdatedData = readColumnArrayOfUpdatedData;
 
 module.exports = mysql_tools;

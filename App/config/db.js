@@ -2,47 +2,47 @@ require('dotenv').config();
 const mysql = require('mysql');
 
 //Use DBUSER instead of USER b/c USER already exists in default environment
-const dbReadCon = mysql.createPool({
+const dbogCon = mysql.createPool({
     host: process.env.HOST,
     user: process.env.DBUSER,
     password: process.env.PASSWORD,
     port: process.env.PORT,
-    database: process.env.READDATABASE
+    database: process.env.ORIGINALDATABASE
 })
 
-const dbWriteCon = mysql.createPool({
+const dbupdCon = mysql.createPool({
     host: process.env.HOST,
     user: process.env.DBUSER,
     password: process.env.PASSWORD,
     port: process.env.PORT,
-    database: process.env.WRITEDATABASE
+    database: process.env.UPDATEDDATABASE
 })
 
-dbReadCon.on('connection', function (connection) {
+dbogCon.on('connection', function (connection) {
     console.log('DB Connection established');
 
-    dbReadCon.on('error', function (err) {
+    dbogCon.on('error', function (err) {
         console.error(new Date(), 'MySQL error', err.code);
     });
-    dbReadCon.on('close', function (err) {
+    dbogCon.on('close', function (err) {
         console.error(new Date(), 'MySQL close', err);
     });
 
 });
 
-dbWriteCon.on('connection', function (connection) {
+dbupdCon.on('connection', function (connection) {
     console.log('DB Connection established');
 
-    dbWriteCon.on('error', function (err) {
+    dbupdCon.on('error', function (err) {
         console.error(new Date(), 'MySQL error', err.code);
     });
-    dbWriteCon.on('close', function (err) {
+    dbupdCon.on('close', function (err) {
         console.error(new Date(), 'MySQL close', err);
     });
 
 });
 
 module.exports = {
-    dbReadCon: dbReadCon,
-    dbWriteCon: dbWriteCon
+    dbogCon: dbogCon,
+    dbupdCon: dbupdCon
 }
