@@ -38,7 +38,7 @@ var insertRouter = require('./routes/insert');
 app.use('/insert',insertRouter)
 
 app.get("",(req,res)=>{
-    res.render('index',{text:'This is a pen'})
+    res.render('index')
   })
 app.get("/about",(req,res)=>{
     res.render('about',{text:'About?'})
