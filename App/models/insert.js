@@ -5,16 +5,16 @@ module.exports ={
         var info = Object.assign({},req.body)
 
         let ID = Object.values(info)[0];
-        let Date = Object.values(info)[1];
+        let ObjCode = Object.values(info)[1];
+        let PlaceCode = Object.values(info)[2];
+        let DbCode = Object.values(info)[3];
             
-        dbCon.query(`INSERT INTO visitor_log (Visitor_ID,VisitorLog_UpdDate) VALUES (?,?)`,[ID,Date], (error,results,fields) => {
+        dbCon.query(`INSERT INTO visitor_log (Visitor_ID,Object_Code,Place_Code,Database_ID) VALUES (?,?,?,?)`,[ID,ObjCode,PlaceCode,DbCode], (error,results,fields) => {
             if (error) throw error;
         })
         
     },
     insert_update_model : function() {
-        console.log('done');
-        tool.pullAllVisitor_Log;
-        console.log('done2');
+        tool.pullAllVisitor_Log();
     }
 }

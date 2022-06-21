@@ -15,7 +15,7 @@ module.exports ={
     },
     insert_Update : function(req, res, next) {
         console.log('done55');
-        model.insert_update_model;
+        model.insert_update_model();
         req.flash('feedback','Update Completed')
         res.redirect('/insert');
     }

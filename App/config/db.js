@@ -19,7 +19,7 @@ const dbupdCon = mysql.createPool({
 })
 
 dbogCon.on('connection', function (connection) {
-    console.log('DB Connection established');
+    console.log('DBog Connection established');
 
     dbogCon.on('error', function (err) {
         console.error(new Date(), 'MySQL error', err.code);
@@ -31,7 +31,7 @@ dbogCon.on('connection', function (connection) {
 });
 
 dbupdCon.on('connection', function (connection) {
-    console.log('DB Connection established');
+    console.log('DBupd Connection established');
 
     dbupdCon.on('error', function (err) {
         console.error(new Date(), 'MySQL error', err.code);
