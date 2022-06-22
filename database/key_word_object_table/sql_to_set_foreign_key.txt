@@ -1,0 +1,10 @@
+ALTER TABLE object_keyword_relation
+    ADD CONSTRAINT fk_thistable_with_object
+    FOREIGN KEY (object_id)
+    REFERENCES object(id);
+
+ALTER TABLE object_keyword_relation
+    ADD CONSTRAINT fk_thistable_with_keyword
+    FOREIGN KEY (keyword_id)
+    REFERENCES keyword(id);
+
