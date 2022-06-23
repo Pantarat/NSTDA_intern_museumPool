@@ -7,7 +7,7 @@ const dbogCon = mysql.createPool({
     user: process.env.DBUSER,
     password: process.env.PASSWORD,
     port: process.env.PORT,
-    database: process.env.ORIGINALDATABASE
+    database: process.env.ORIGINALDB1
 })
 
 const dbupdCon = mysql.createPool({
@@ -15,7 +15,7 @@ const dbupdCon = mysql.createPool({
     user: process.env.DBUSER,
     password: process.env.PASSWORD,
     port: process.env.PORT,
-    database: process.env.UPDATEDDATABASE
+    database: process.env.UPDATEDDB
 })
 
 dbogCon.on('connection', function (connection) {
@@ -42,7 +42,8 @@ dbupdCon.on('connection', function (connection) {
 
 });
 
-module.exports = {
-    dbogCon: dbogCon,
-    dbupdCon: dbupdCon
-}
+dbexports = {}
+dbexports.dbogCon = dbogCon;
+dbexports.dbupdCon = dbupdCon;
+
+module.exports = dbexports;

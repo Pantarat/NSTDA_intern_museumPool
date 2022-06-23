@@ -1,6 +1,7 @@
 const dbCon = require('../config/db').dbupdCon;
 const { time } = require('console');
 const tool = require('./writeTo_newDatabase')
+require('dotenv').config();
 module.exports ={
     insert_one_model : function(req) {
         var info = Object.assign({},req.body)
@@ -16,7 +17,7 @@ module.exports ={
         
     },
     insert_update_model : function() {
-        tool.pullAllVisitor_Log();
+        tool.pullAllVisitor_Log(process.env.ORIGINALDB1);
     },
     insert_one_model1 : function(req) {
         var info = Object.assign({},req.body)

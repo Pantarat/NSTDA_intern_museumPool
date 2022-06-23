@@ -1,23 +1,27 @@
 const mysql_tools = require('./mysql_tools');
 
-function value_count(input = []){
+function value_count(input = [],keytocount=''){
     let output = {}
-    for (let value of input){
-        if (Object.keys(output).includes(value)){
-            output[value] += 1;
+    for (let row of input){
+        if (Object.keys(output).includes(row[keytocount])){
+            output[row[keytocount]] += 1;
         }
         else {
-            output[value] = 1;
+            output[row[keytocount]] = 1;
         }
     }
-    return output;
+    //sort output
+    const output_sorted = Object.fromEntries(
+        Object.entries(output).sort(([,a],[,b]) => b-a)
+    )
+    return output_sorted;
 }
 
 async function process_popular(){
 
     //read data from table
-    var pop_data = await mysql_tools.readColumnArrayOfUpdatedData('visitor_log',['Visitor_ID','VisitorLog_UpdDate','Object_Code','Place_Code']);
-
+    let pop_data = await mysql_tools.readColumnArrayOfUpdatedData('visitor_log',['Visitor_ID','VisitorLog_UpdDate','Object_Code','Place_Code']);
+    
     //remove duplicates
     pop_data = pop_data.filter((tag, index, array) => array.findIndex(t => t.Visitor_ID == tag.Visitor_ID && t.Object_Code == tag.Object_Code) == index);
 
@@ -30,7 +34,7 @@ async function process_popular(){
         row['VisitorLog_UpdDate'] = Date.parse(row['VisitorLog_UpdDate']);
         }
     )
-    //console.log(pop_data)
+    console.log(value_count(await pop_data,'Object_Code'));
 
 
 }
