@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 22, 2022 at 04:34 AM
+-- Generation Time: Jun 23, 2022 at 06:05 AM
 -- Server version: 10.4.18-MariaDB
 -- PHP Version: 7.3.27
 
@@ -33,7 +33,8 @@ CREATE TABLE `object` (
   `description` longtext COLLATE utf8_unicode_ci NOT NULL,
   `place_code` varchar(30) COLLATE utf8_unicode_ci NOT NULL,
   `object_code` varchar(30) COLLATE utf8_unicode_ci NOT NULL,
-  `image` varchar(300) COLLATE utf8_unicode_ci NOT NULL
+  `image` varchar(300) COLLATE utf8_unicode_ci NOT NULL,
+  `language` varchar(10) COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
