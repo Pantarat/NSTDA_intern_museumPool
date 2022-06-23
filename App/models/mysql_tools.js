@@ -108,30 +108,6 @@ async function readColumnArrayOfUpdatedData(table, columns, condition = "", limi
     });
 }
 
-async function transformDescriptionToKeyword(inputString){
-    // description_obj.forEach(object => {
-
-    // })
-
-    var request = require('request');
-    var options = {
-        'method': 'POST',
-        'url': 'https://api.aiforthai.in.th/tagsuggestion',
-        'headers': {
-            'Apikey': 'X1OG75cGDnHBaStN5KevqsguLrRS5aBC',
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        form: {
-            'text': inputString,
-            'numtag': '5'
-        }
-    };
-    request(options, function (error, response) {
-        if (error) throw new Error(error);
-        console.log(JSON.parse(response.body));
-    });
-}
-
 let mysql_tools = {};
 mysql_tools.endOrignalConnection = endOriginalConnection;
 mysql_tools.getAllData = getAllData;
@@ -141,6 +117,6 @@ mysql_tools.logDataByColumn = logDataByColumn;
 mysql_tools.writeColumn = writeColumn;
 mysql_tools.endUpdatedConnection = endUpdatedConnection;
 mysql_tools.readColumnArrayOfUpdatedData = readColumnArrayOfUpdatedData;
-mysql_tools.transformDescriptionToKeyword = transformDescriptionToKeyword;
+
 
 module.exports = mysql_tools;
