@@ -4,7 +4,7 @@ dbtest = require('./config/db');
 tool = require('./models/mysql_tools');
 keyword = require('./models/keyword')
 
-//write.pullAllObject_Pop(process.env.ORIGINALDB1);
+write.pullAllObject_Pop(process.env.ORIGINALDB1);
 require('dotenv').config();
 //write.pullAllVisitor_Log('museum_pool');
 //write.pullAllObject('museum_pool');
@@ -18,9 +18,15 @@ require('dotenv').config();
 //     console.log(result);
 // })
 
-keyword.getDescription()
-.then(data => {
-    keyword.transformDescriptionToKeyword(data).then(result => {
-        keyword.writeToKeyword_Table(result);
-    })
-})
+// let k = 1985;
+// for (let i = k; i < 7700; i += 5) {
+//     setTimeout(() => {
+//         j = i + 5;
+//         console.log('Written',i,'to',j);
+//         keyword.fillRelation(i, j);
+//     }, (i-k) * 500)
+// }
+
+
+
+//keyword.fillKeywordAndRelation(60,65)

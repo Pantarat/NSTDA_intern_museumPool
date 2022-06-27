@@ -8,8 +8,8 @@ require('dotenv').config();
 const sequelize = require('sequelize');
 
 //get list of objects with id and name+description
-async function getDescription(limit = 0) {
-    let descriptions = await sql_tools.getColumnArrayOfData(process.env.UPDATEDDB, 'object', ['id', 'name', 'description'], 'language = \'th-TH\'', limit)
+async function getDescription(limitstart = 0, limitstop = 0) {
+    let descriptions = await sql_tools.getColumnArrayOfData(process.env.UPDATEDDB, 'object', ['id', 'name', 'description'], 'language = \'th-TH\'', limitstart, limitstop);
 
     let newDesList = descriptions.map((description) => {
         let newDesObj = {}
@@ -36,10 +36,17 @@ async function transformDescriptionToKeyword(descriptionObj_list, numberOfKeywor
         }
     };
 
+    const delay_in_second = function () {
+        return new Promise((resolve, reject) => {
+            let delay_in_second = Math.floor(Math.random() * 10) + 2;
+            setTimeout(resolve, delay_in_second * 10);
+        })
+    }
+
     return new Promise((resolve, reject) => {
         var counter = 0;
         let objsWithKeyword = [];
-        descriptionObj_list.forEach((object,i) => {
+        descriptionObj_list.forEach((object, i) => {
             setTimeout(() => {
                 //cut up to 1000 characters
                 let apiDescript;
@@ -56,10 +63,11 @@ async function transformDescriptionToKeyword(descriptionObj_list, numberOfKeywor
                     if (error) throw resolve(error);
                     else {
                         for (let i = 0; i < numberOfKeywords; i++) {
+                            //console.log(response.body);
                             let key = (JSON.parse(response.body).tags)[i];
                             objsWithKeyword.push(Object.assign({}, object, key));
                             counter++;
-                            console.log(Math.ceil(counter / 5));
+                            //console.log(Math.ceil(counter / 5));
                         }
                     }
                     if (counter === (numberOfKeywords * descriptionObj_list.length)) {
@@ -70,18 +78,76 @@ async function transformDescriptionToKeyword(descriptionObj_list, numberOfKeywor
                         resolve(objsWithKeyword);
                     }
                 })
-            }, i*1000)//delay time here
+            }, i * 100)//delay time here
 
         })
     })
 }
 
-function writeToKeyword_Table(data) {
-    let querydata = data.map((row) => {
-        return { tag: row.tag };
+async function writeToKeyword_Table(data) {
+    return new Promise((resolve, reject) => {
+        let querydata = data.map((row) => {
+            return { tag: row.tag };
+        })
+        sql_tools.writeColumn('keyword', ['value'], querydata)
+
+        resolve('done');
     })
-    sql_tools.writeColumn('keyword', ['value'], querydata)
 }
+
+async function writeToObj_Key_Relation(data) {
+    return new Promise((resolve, reject) => {
+        let newdata = [];
+        sql_tools.readColumnArrayOfUpdatedData('keyword', ['id', 'value'])
+            .then(keydata => {
+                let keyword_table = keydata
+                data.forEach(object => {
+                    for (let i = 0; i < keyword_table.length; i++) {
+                        if (object.tag == keyword_table[i].value) {
+                            object.keyword_id = keyword_table[i].id
+                            delete object.tag
+                            break;
+                        }
+                    }
+                    if(object.keyword_id){newdata.push(object)}
+                })
+                //console.log(newdata)
+                sql_tools.writeColumn('object_keyword_relation', ['object_id', 'score', 'keyword_id'], newdata);
+                resolve('done')
+            })
+    })
+}
+
+function fillKeyword(start, stop) {
+    keyword.getDescription(start, stop)
+        .then(data => {
+            keyword.transformDescriptionToKeyword(data).then(async (result) => {
+                await keyword.writeToKeyword_Table(result)
+            })
+        })
+}
+
+function fillRelation(start, stop){
+    keyword.getDescription(start, stop)
+        .then(data => {
+            keyword.transformDescriptionToKeyword(data).then(async (result) => {
+                keyword.writeToObj_Key_Relation(result)
+            })
+        })
+}
+
+function fillKeywordAndRelation(start, stop) {
+    keyword.getDescription(start, stop)
+        .then(data => {
+            keyword.transformDescriptionToKeyword(data).then(async (result) => {
+                await keyword.writeToKeyword_Table(result)
+                //console.log(result);
+                keyword.writeToObj_Key_Relation(result)
+            })
+        })
+}
+
+
 
 
 keywordExports = {}
@@ -89,5 +155,9 @@ keywordExports = {}
 keywordExports.getDescription = getDescription;
 keywordExports.transformDescriptionToKeyword = transformDescriptionToKeyword;
 keywordExports.writeToKeyword_Table = writeToKeyword_Table
+keywordExports.writeToObj_Key_Relation = writeToObj_Key_Relation;
+keywordExports.fillKeywordAndRelation = fillKeywordAndRelation;
+keywordExports.fillKeyword = fillKeyword;
+keywordExports.fillRelation = fillRelation;
 
 module.exports = keywordExports
