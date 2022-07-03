@@ -1,6 +1,7 @@
 const dbconfig = require('../config/db');
 const dbogCon = dbconfig.dbogCon;
 const dbupdCon = dbconfig.dbupdCon;
+require('dotenv').config();
 
 async function get_keyword_and_score(Visitor_ID) {
     return new Promise((resolve, reject) => {
@@ -8,13 +9,13 @@ async function get_keyword_and_score(Visitor_ID) {
         SELECT k.value, okr.score
         FROM 
         (SELECT Visitor_ID, Object_Code, max(VisitorLog_UpdDate)
-        from museum_pool_2.visitor_log
+        from ${process.env.UPDATEDDB}.visitor_log
         where Visitor_ID=${Visitor_ID}
         group by Object_Code, Visitor_ID, Place_Code
         order by max(VisitorLog_UpdDate) DESC Limit 10) v
-        JOIN museum_pool_2.object_description od ON od.object_code = v.Object_Code
-        JOIN museum_pool_2.object_keyword_relation okr ON od.id = okr.object_id
-        JOIN museum_pool_2.keyword k ON okr.keyword_id = k.id
+        JOIN ${process.env.UPDATEDDB}.object_description od ON od.object_code = v.Object_Code
+        JOIN ${process.env.UPDATEDDB}.object_keyword_relation okr ON od.id = okr.object_id
+        JOIN ${process.env.UPDATEDDB}.keyword k ON okr.keyword_id = k.id
         `;
         dbogCon.query(queryString, (error, results, fields) => {
             if (error) {
@@ -158,7 +159,7 @@ function getTopKeyword(sortedList){
     return recommendKeyword
 }
 
-async function getImageFromKeyword(VisitorID,recommendKeyword) {
+async function getImageFromKeyword(VisitorID,recommendKeyword,limit = 0) {
     return new Promise((resolve, reject) => {
         let queryString = `
         SELECT okrc.object_id,okrc.count,od.image
@@ -166,7 +167,7 @@ async function getImageFromKeyword(VisitorID,recommendKeyword) {
         SELECT object_id,COUNT(*) AS count
         FROM object_keyword_relation okr
         JOIN keyword k ON okr.keyword_id = k.id
-        WHERE k.value IN (${recommendKeyword[0].value},${recommendKeyword[1].value},${recommendKeyword[2].value}') -- values to filter
+        WHERE k.value IN ('${recommendKeyword[0].value}','${recommendKeyword[1].value}','${recommendKeyword[2].value}') -- values to filter
         GROUP BY okr.object_id
         ORDER BY okr.object_id) AS okrc
         JOIN object_description od ON okrc.object_id = od.id
@@ -177,9 +178,12 @@ async function getImageFromKeyword(VisitorID,recommendKeyword) {
         WHERE Visitor_ID = ${VisitorID} -- filter out objects thats already seen
         )
         GROUP BY okrc.object_id
-        ORDER BY okrc.count DESC;
+        ORDER BY okrc.count DESC
         `;
-        dbogCon.query(queryString, (error, results, fields) => {
+        if (limit>0){
+            queryString += 'LIMIT ' + limit;
+        }
+        dbupdCon.query(queryString, (error, results, fields) => {
             if (error) {
                 reject(error);
             } else {
@@ -188,13 +192,14 @@ async function getImageFromKeyword(VisitorID,recommendKeyword) {
         })
     })
 }
-async function getRecommedImage(Visitor_ID){
+async function getRecommedImage(Visitor_ID,limit){
     get_keyword_and_score(Visitor_ID)
     .then(result => {
         getTopKeyword(sortList(getMaxValue(result)));
         console.log('result',result);
-        let out =getImageFromKeyword(Visitor_ID,result);
-        console.log(out);
+        getImageFromKeyword(Visitor_ID,result,limit).then((out)=>{
+            console.log(out);
+        })
     })
 }
 var allexports = {};

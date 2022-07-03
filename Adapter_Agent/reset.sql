@@ -12,10 +12,10 @@ ALTER TABLE object_image AUTO_INCREMENT = 1;
 DELETE FROM object;
 ALTER TABLE object AUTO_INCREMENT = 1;
 
--- DELETE FROM keyword
+DELETE FROM keyword;
 -- ORDER BY nleft DESC;
--- ALTER TABLE keyword AUTO_INCREMENT = 1;
+ALTER TABLE keyword AUTO_INCREMENT = 1;
 
--- DELETE FROM object_keyword_relation
+DELETE FROM object_keyword_relation;
 -- ORDER BY nleft DESC;
--- ALTER TABLE object_keyword_relation AUTO_INCREMENT = 1;
+ALTER TABLE object_keyword_relation AUTO_INCREMENT = 1;
