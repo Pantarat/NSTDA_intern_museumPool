@@ -150,9 +150,57 @@ function sortList(unsortedList){
     }
     return sortedList
 }
+function getTopKeyword(sortedList){
+    let recommendKeyword = {};
+    recommendKeyword[0]=sortedList[0];
+    recommendKeyword[1]=sortedList[1];
+    recommendKeyword[2]=sortedList[2];
+    return recommendKeyword
+}
 
+async function getImageFromKeyword(VisitorID,recommendKeyword) {
+    return new Promise((resolve, reject) => {
+        let queryString = `
+        SELECT okrc.object_id,okrc.count,od.image
+        FROM(
+        SELECT object_id,COUNT(*) AS count
+        FROM object_keyword_relation okr
+        JOIN keyword k ON okr.keyword_id = k.id
+        WHERE k.value IN (${recommendKeyword[0].value},${recommendKeyword[1].value},${recommendKeyword[2].value}') -- values to filter
+        GROUP BY okr.object_id
+        ORDER BY okr.object_id) AS okrc
+        JOIN object_description od ON okrc.object_id = od.id
+        JOIN visitor_log v ON od.object_code = v.Object_Code
+        WHERE od.object_code NOT IN(
+        SELECT object_code
+        FROM visitor_log
+        WHERE Visitor_ID = ${VisitorID} -- filter out objects thats already seen
+        )
+        GROUP BY okrc.object_id
+        ORDER BY okrc.count DESC;
+        `;
+        dbogCon.query(queryString, (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(JSON.parse(JSON.stringify(results)));
+            }
+        })
+    })
+}
+async function getRecommedImage(Visitor_ID){
+    get_keyword_and_score(Visitor_ID)
+    .then(result => {
+        getTopKeyword(sortList(getMaxValue(result)));
+        console.log('result',result);
+        let out =getImageFromKeyword(Visitor_ID,result);
+        console.log(out);
+    })
+}
 var allexports = {};
 allexports.get_keyword_and_score = get_keyword_and_score;
 allexports.getMaxValue = getMaxValue;
 allexports.sortList = sortList;
+allexports.getTopKeyword = getTopKeyword;
+allexports.getRecommedImage = getRecommedImage;
 module.exports = allexports;
