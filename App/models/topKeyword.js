@@ -71,10 +71,14 @@ async function get_keyword_and_score(Visitor_ID) {
     { value: 'โรงแรมรีสอร์ท', score: 0.3055555555555555 }
 ];
 */
-function getMaxValue(data) {
+function getunsortedkeyword(data) {
+    if(Object.keys(data).length == 0){
+        return { message : "Visitor ID doesn't exist" }
+    }
     let unsortedList = {};
     unsortedList[0] = { value: data[0].value, score: data[0].score };
     let count = 1;
+    
     for (let j = 1; j < Object.keys(data).length; j++) {
         let set = 0;
         let currentKeyword = data[j].value;
@@ -195,16 +199,25 @@ async function getImageFromKeyword(VisitorID,recommendKeyword,limit = 0) {
 async function getRecommedImage(Visitor_ID,limit){
     get_keyword_and_score(Visitor_ID)
     .then(result => {
-        getTopKeyword(sortList(getMaxValue(result)));
-        console.log('result',result);
-        getImageFromKeyword(Visitor_ID,result,limit).then((out)=>{
-            console.log(out);
+        let unsorted = getunsortedkeyword(result);
+        console.log('maxvalue',unsorted);
+        if(Object.keys(unsorted)[0] == 'message'){
+            console.log(unsorted['message']);
+            
+        }else{
+            let sorted =sortList(unsorted);
+            console.log('sorted',sorted)
+            getTopKeyword(sorted);
+            getImageFromKeyword(Visitor_ID,result,limit).then((out)=>{
+            console.log(out,Object.keys(out).length);
+        
         })
+    }
     })
 }
 var allexports = {};
 allexports.get_keyword_and_score = get_keyword_and_score;
-allexports.getMaxValue = getMaxValue;
+allexports.getunsortedkeyword = getunsortedkeyword;
 allexports.sortList = sortList;
 allexports.getTopKeyword = getTopKeyword;
 allexports.getRecommedImage = getRecommedImage;
