@@ -196,20 +196,75 @@ async function getImageFromKeyword(VisitorID,recommendKeyword,limit = 0) {
         })
     })
 }
+function ExtraKey(sortedList){
+    let ExtraList =[];
+    for (let i = 3; i < Object.keys(sortedList).length;i=i+1){
+        ExtraList.push(sortedList[i].value);
+    }
+    let ExtraString = ExtraList.join("','");
+    return ExtraString
+}
+async function getImageFromKeywordExtra(VisitorID,ExtraString,limit = 0) {
+    return new Promise((resolve, reject) => {
+        let queryString = `
+        SELECT okrc.object_id,okrc.count,od.image
+        FROM(
+        SELECT object_id,COUNT(*) AS count
+        FROM object_keyword_relation okr
+        JOIN keyword k ON okr.keyword_id = k.id
+        WHERE k.value IN ('${ExtraString}') -- values to filter
+        GROUP BY okr.object_id
+        ORDER BY okr.object_id) AS okrc
+        JOIN object_description od ON okrc.object_id = od.id
+        JOIN visitor_log v ON od.object_code = v.Object_Code
+        WHERE od.object_code NOT IN(
+        SELECT object_code
+        FROM visitor_log
+        WHERE Visitor_ID = ${VisitorID} -- filter out objects thats already seen
+        )
+        GROUP BY okrc.object_id
+        ORDER BY okrc.count DESC
+        `;
+        if (limit>0){
+            queryString += 'LIMIT ' + limit;
+        }
+        dbupdCon.query(queryString, (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(JSON.parse(JSON.stringify(results)));
+            }
+        })
+    })
+}
+
 async function getRecommedImage(Visitor_ID,limit){
     get_keyword_and_score(Visitor_ID)
     .then(result => {
         let unsorted = getunsortedkeyword(result);
-        console.log('maxvalue',unsorted);
+        //console.log('maxvalue',unsorted);
         if(Object.keys(unsorted)[0] == 'message'){
             console.log(unsorted['message']);
             
         }else{
             let sorted =sortList(unsorted);
-            console.log('sorted',sorted)
-            getTopKeyword(sorted);
-            getImageFromKeyword(Visitor_ID,result,limit).then((out)=>{
-            console.log(out,Object.keys(out).length);
+            //console.log('sorted',sorted)
+            let topkey = getTopKeyword(sorted);
+            getImageFromKeyword(Visitor_ID,topkey,5).then((first)=>{
+            let needMore = limit-Object.keys(first).length;
+            let firstpart = first;
+            if(Object.keys(first).length >= limit){
+                console.log("First",first,Object.keys(first).length);
+            }else{
+                //console.log("firstpart",firstpart,Object.keys(firstpart).length,typeof firstpart);
+                let extra = ExtraKey(sorted);
+                getImageFromKeywordExtra(Visitor_ID,extra,needMore).then((extra)=>{
+                //console.log("ex",extra,Object.keys(extra).length,typeof extra);
+                let complete = [...firstpart,...extra];
+                console.log("co",complete,Object.keys(complete).length,typeof complete);
+                
+            })
+        }
         
         })
     }
@@ -221,4 +276,6 @@ allexports.getunsortedkeyword = getunsortedkeyword;
 allexports.sortList = sortList;
 allexports.getTopKeyword = getTopKeyword;
 allexports.getRecommedImage = getRecommedImage;
+allexports.getImageFromKeywordExtra=getImageFromKeywordExtra;
+allexports.ExtraKey=ExtraKey;
 module.exports = allexports;
