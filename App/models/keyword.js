@@ -137,7 +137,7 @@ function fillRelation(startFrom = 0) {
     let k = startFrom;
     keyword.getDescription()
         .then(data => {
-            for (let i = k; i < 7700; i += 5) {
+            for (let i = k; i < data.length; i += 5) { //แก้ตรงนี้
                 setTimeout(() => {
                     j = i + 5;
                     console.log('Written', i, 'to', j);
@@ -154,7 +154,7 @@ function fillKeyword(startFrom = 0) {
     let k = startFrom;
     keyword.getDescription()
         .then(data => {
-            for (let i = k; i < 7700; i += 5) {
+            for (let i = k; i < data.length; i += 5) {
                 setTimeout(() => {
                     j = i + 5;
                     console.log('Written', i, 'to', j);
