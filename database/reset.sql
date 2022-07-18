@@ -5,3 +5,4 @@ ALTER TABLE object_population AUTO_INCREMENT = 1;
 
 DELETE FROM visitor_log;
 ALTER TABLE visitor_log AUTO_INCREMENT = 1;
+

@@ -262,7 +262,7 @@ async function getRecommedImage(Visitor_ID,limit){
                 //console.log("ex",extra,Object.keys(extra).length,typeof extra);
                 let complete = [...firstpart,...extra];
                 console.log("co",complete,Object.keys(complete).length,typeof complete);
-                
+                return complete;
             })
         }
         
