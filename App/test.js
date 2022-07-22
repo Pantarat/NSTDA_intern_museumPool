@@ -9,7 +9,7 @@ similarity = require('./models/similarity');
 
 require('dotenv').config();
 
-//write.pullAllObject_Pop(process.env.ORIGINALDB1);
+//write.pullAllObject_Image(process.env.ORIGINALDB1);
 
 //keyword.fillRelation(0);
 
@@ -25,6 +25,10 @@ require('dotenv').config();
 
 //console.log(similarity.findUnion(new Set([1,2,3]), new Set([2,3,4])));
 
-similarity.writeAllSimilarity(7539);
+//similarity.writeAllSimilarity();
 
 //similarity.writeAllSimilarity2(1);
+
+similarity.getRecommedImage(1,10);
+
+//topkey.getRecommedImage(1,10);

@@ -75,13 +75,15 @@ function writeObject_Image(data) {
     mysql_tools.writeColumn("object_image", ["Object_Code", "Object_ID", "ObjectDescription_Name", "ObjectDescription", "ImageObject_ID", "ImageObject_Path"], data);
 }
 
-function getObject_Data(database) {
+function getObject_DescriptionData(database) {
     return new Promise((resolve, reject) => {
         let queryString =`SELECT
             od.ObjectDescription_Name,
             od.ObjectDescription,
             od.ObjectDescription_Language,
             o.Place_Code,
+            p.Place_Latitude,
+            p.Place_Longtitude,
             o.Object_Code,
             io.ImageObject_Path
         FROM ${database}.object o
@@ -90,9 +92,9 @@ function getObject_Data(database) {
         JOIN
             ${database}.re_object_imageobject ro ON o.Object_ID = ro.Object_ID
         JOIN
-            ${database}.imageobject io ON ro.ImageObject_ID = io.ImageObject_ID`
-        
-        ;
+            ${database}.imageobject io ON ro.ImageObject_ID = io.ImageObject_ID
+        LEFT JOIN
+            ${database}.place p ON o.Place_Code = p.Place_Code;`;
         dbogCon.query(queryString, (error, results, fields) => {
             if (error) {
                 reject(error);
@@ -103,8 +105,8 @@ function getObject_Data(database) {
     })
 }
 
-function writeObject(data) {
-    mysql_tools.writeColumn("object", ["name", "description", "language", "place_code", "object_code", "image"], data);
+function writeObject_Description(data) {
+    mysql_tools.writeColumn("object_description", ["name", "description", "language", "place_code", "place_latitude", "place_longtitude", "object_code", "image"], data);
 }
 
 function pullAllObject_Pop(database) {
@@ -127,10 +129,10 @@ function pullAllObject_Image(database) {
         })
 }
 
-function pullAllObject(database){
-    getObject_Data(database)
+function pullAllObject_Description(database){
+    getObject_DescriptionData(database)
     .then(result => {
-        writeObject(result);
+        writeObject_Description(result);
     })
 }
 
@@ -145,9 +147,9 @@ allexports.pullAllVisitor_Log = pullAllVisitor_Log;
 allexports.getObject_ImageData = getObject_ImageData;
 allexports.writeObject_Image = writeObject_Image;
 allexports.pullAllObject_Image = pullAllObject_Image;
-allexports.getObject_Data = getObject_Data;
-allexports.writeObject = writeObject;
-allexports.pullAllObject = pullAllObject
+allexports.getObject_DescriptionData = getObject_DescriptionData;
+allexports.writeObject_Description = writeObject_Description;
+allexports.pullAllObject_Description = pullAllObject_Description;
 
 
 module.exports = allexports;

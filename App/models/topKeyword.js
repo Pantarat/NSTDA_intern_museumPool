@@ -163,26 +163,50 @@ function getTopKeyword(sortedList){
     return recommendKeyword
 }
 
-async function getImageFromKeyword(VisitorID,recommendKeyword,limit = 0) {
+async function getImageFromKeyword(VisitorID,recommendKeyword,limit = 0,distance = 1000) {
     return new Promise((resolve, reject) => {
         let queryString = `
-        SELECT okrc.object_id,okrc.count,od.image
-        FROM(
-        SELECT object_id,COUNT(*) AS count
-        FROM object_keyword_relation okr
-        JOIN keyword k ON okr.keyword_id = k.id
-        WHERE k.value IN ('${recommendKeyword[0].value}','${recommendKeyword[1].value}','${recommendKeyword[2].value}') -- values to filter
-        GROUP BY okr.object_id
-        ORDER BY okr.object_id) AS okrc
-        JOIN object_description od ON okrc.object_id = od.id
-        JOIN visitor_log v ON od.object_code = v.Object_Code
-        WHERE od.object_code NOT IN(
-        SELECT object_code
-        FROM visitor_log
-        WHERE Visitor_ID = ${VisitorID} -- filter out objects thats already seen
-        )
-        GROUP BY okrc.object_id
-        ORDER BY okrc.count DESC
+        SELECT okrc.object_id,okrc.count,od.image,(
+            -- for the distance
+            111.111 *
+            DEGREES(ACOS(LEAST(1.0, COS(RADIANS(od.place_latitude))
+             * COS(RADIANS(mostrecent.place_latitude))
+             * COS(RADIANS(od.place_longtitude - mostrecent.place_longtitude))
+             + SIN(RADIANS(od.place_latitude))
+             * SIN(RADIANS(mostrecent.place_latitude)))))) AS distance_in_km
+             -- for the distance
+            FROM(
+                SELECT object_id,COUNT(*) AS count
+                FROM object_keyword_relation okr
+                JOIN keyword k ON okr.keyword_id = k.id
+                WHERE k.value IN ('${recommendKeyword[0].value}','${recommendKeyword[1].value}','${recommendKeyword[2].value}') -- values to filter
+                GROUP BY okr.object_id
+                ORDER BY okr.object_id) AS okrc
+            JOIN object_description od ON okrc.object_id = od.id
+            JOIN visitor_log v ON od.object_code = v.Object_Code
+            JOIN (
+                SELECT Object_Code,place_latitude,place_longtitude
+                FROM object_description
+                WHERE Object_Code =
+                    (SELECT Object_Code
+                    from visitor_log
+                    where Visitor_ID=${VisitorID}
+                    group by Object_Code
+                    order by max(VisitorLog_UpdDate) DESC Limit 1)) AS mostrecent
+            WHERE od.object_code NOT IN(
+                SELECT object_code
+                FROM visitor_log
+                WHERE Visitor_ID = ${VisitorID} -- filter out objects thats already seen
+                )
+            AND
+                (v.VisitorLog_UpdDate
+                BETWEEN DATE(NOW() - INTERVAL 6 MONTH)
+                AND DATE(NOW()))
+            GROUP BY okrc.object_id
+            -- for the distance
+            HAVING distance_in_km < ${distance}
+            -- for the distance
+            ORDER BY distance_in_km ASC,okrc.count DESC
         `;
         if (limit>0){
             queryString += 'LIMIT ' + limit;
@@ -204,26 +228,50 @@ function ExtraKey(sortedList){
     let ExtraString = ExtraList.join("','");
     return ExtraString
 }
-async function getImageFromKeywordExtra(VisitorID,ExtraString,limit = 0) {
+async function getImageFromKeywordExtra(VisitorID,ExtraString,limit = 0,distance = 1000) {
     return new Promise((resolve, reject) => {
         let queryString = `
-        SELECT okrc.object_id,okrc.count,od.image
-        FROM(
-        SELECT object_id,COUNT(*) AS count
-        FROM object_keyword_relation okr
-        JOIN keyword k ON okr.keyword_id = k.id
-        WHERE k.value IN ('${ExtraString}') -- values to filter
-        GROUP BY okr.object_id
-        ORDER BY okr.object_id) AS okrc
-        JOIN object_description od ON okrc.object_id = od.id
-        JOIN visitor_log v ON od.object_code = v.Object_Code
-        WHERE od.object_code NOT IN(
-        SELECT object_code
-        FROM visitor_log
-        WHERE Visitor_ID = ${VisitorID} -- filter out objects thats already seen
-        )
-        GROUP BY okrc.object_id
-        ORDER BY okrc.count DESC
+        SELECT okrc.object_id,okrc.count,od.image,(
+            -- for the distance
+            111.111 *
+            DEGREES(ACOS(LEAST(1.0, COS(RADIANS(od.place_latitude))
+             * COS(RADIANS(mostrecent.place_latitude))
+             * COS(RADIANS(od.place_longtitude - mostrecent.place_longtitude))
+             + SIN(RADIANS(od.place_latitude))
+             * SIN(RADIANS(mostrecent.place_latitude)))))) AS distance_in_km
+             -- for the distance
+            FROM(
+                SELECT object_id,COUNT(*) AS count
+                FROM object_keyword_relation okr
+                JOIN keyword k ON okr.keyword_id = k.id
+                WHERE k.value IN ('${ExtraString}') -- values to filter
+                GROUP BY okr.object_id
+                ORDER BY okr.object_id) AS okrc
+            JOIN object_description od ON okrc.object_id = od.id
+            JOIN visitor_log v ON od.object_code = v.Object_Code
+            JOIN (
+                SELECT Object_Code,place_latitude,place_longtitude
+                FROM object_description
+                WHERE Object_Code =
+                    (SELECT Object_Code
+                    from visitor_log
+                    where Visitor_ID=${VisitorID}
+                    group by Object_Code
+                    order by max(VisitorLog_UpdDate) DESC Limit 1)) AS mostrecent
+            WHERE od.object_code NOT IN(
+                SELECT object_code
+                FROM visitor_log
+                WHERE Visitor_ID = ${VisitorID} -- filter out objects thats already seen
+                )
+            AND
+                (v.VisitorLog_UpdDate
+                BETWEEN DATE(NOW() - INTERVAL 6 MONTH)
+                AND DATE(NOW()))
+            GROUP BY okrc.object_id
+            -- for the distance
+            HAVING distance_in_km < ${distance}
+            -- for the distance
+            ORDER BY distance_in_km ASC,okrc.count DESC
         `;
         if (limit>0){
             queryString += 'LIMIT ' + limit;
@@ -238,7 +286,7 @@ async function getImageFromKeywordExtra(VisitorID,ExtraString,limit = 0) {
     })
 }
 
-async function getRecommedImage(Visitor_ID,limit){
+async function getRecommedImage(Visitor_ID,limit,distance){
     get_keyword_and_score(Visitor_ID)
     .then(result => {
         let unsorted = getunsortedkeyword(result);
@@ -250,7 +298,7 @@ async function getRecommedImage(Visitor_ID,limit){
             let sorted =sortList(unsorted);
             //console.log('sorted',sorted)
             let topkey = getTopKeyword(sorted);
-            getImageFromKeyword(Visitor_ID,topkey,5).then((first)=>{
+            getImageFromKeyword(Visitor_ID,topkey,5,distance).then((first)=>{
             let needMore = limit-Object.keys(first).length;
             let firstpart = first;
             if(Object.keys(first).length >= limit){
@@ -258,7 +306,7 @@ async function getRecommedImage(Visitor_ID,limit){
             }else{
                 //console.log("firstpart",firstpart,Object.keys(firstpart).length,typeof firstpart);
                 let extra = ExtraKey(sorted);
-                getImageFromKeywordExtra(Visitor_ID,extra,needMore).then((extra)=>{
+                getImageFromKeywordExtra(Visitor_ID,extra,needMore,distance).then((extra)=>{
                 //console.log("ex",extra,Object.keys(extra).length,typeof extra);
                 let complete = [...firstpart,...extra];
                 console.log("co",complete,Object.keys(complete).length,typeof complete);
