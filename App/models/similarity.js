@@ -187,7 +187,9 @@ async function getRecommedImage(visitor_id, limit = 20, distance = 1000) {
     let mostCommonObject = await getSimilarObject_Code(visitor_id);
     return new Promise((resolve, reject) => {
         let mostCommonObjectArr = mostCommonObject.map(x => { return "'"+x[0]+"'" });
-        top.getRecommedImage_Objcode(mostCommonObjectArr,10,50);
+        top.getRecommedImage_Objcode(visitor_id,mostCommonObjectArr,10,50).then(
+
+        )
         
     })
 }

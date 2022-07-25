@@ -6,6 +6,7 @@ tool = require('./models/mysql_tools');
 keyword = require('./models/keyword')
 topkey = require('./models/topKeyword');
 similarity = require('./models/similarity');
+recommend = require('./models/recommend');
 
 require('dotenv').config();
 
@@ -29,6 +30,8 @@ require('dotenv').config();
 
 //similarity.writeAllSimilarity2(1);
 
-similarity.getRecommedImage(1,10);
+// similarity.getRecommedImage(3,10);
 
-//topkey.getRecommedImage(1,10);
+//topkey.getRecommedImage(3,10);
+
+recommend.getRecommended(3,'SIMILAR',200,500);

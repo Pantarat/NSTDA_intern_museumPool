@@ -35,7 +35,6 @@ async function get_keyword_and_score_objcode(codeList) {
         JOIN ${process.env.UPDATEDDB}.keyword k ON okr.keyword_id = k.id
         WHERE od.object_code IN (${codeList}) -- object codes in here
         `;
-        console.log(queryString);
         dbogCon.query(queryString, (error, results, fields) => {
             if (error) {
                 reject(error);
@@ -198,7 +197,7 @@ async function getImageFromKeyword(VisitorID,recommendKeyword,limit = 0,distance
                 SELECT object_id,COUNT(*) AS count
                 FROM object_keyword_relation okr
                 JOIN keyword k ON okr.keyword_id = k.id
-                WHERE k.value IN ('${recommendKeyword[0].value}','${recommendKeyword[1].value}','${recommendKeyword[2].value}') -- values to filter
+                WHERE k.value IN ("${recommendKeyword[0].value}","${recommendKeyword[1].value}","${recommendKeyword[2].value}") -- values to filter
                 GROUP BY okr.object_id
                 ORDER BY okr.object_id) AS okrc
             JOIN object_description od ON okrc.object_id = od.id
@@ -241,10 +240,13 @@ async function getImageFromKeyword(VisitorID,recommendKeyword,limit = 0,distance
 }
 function ExtraKey(sortedList){
     let ExtraList =[];
-    for (let i = 3; i < Object.keys(sortedList).length;i=i+1){
+    let end;
+    if (Object.keys(sortedList).length < 13){ end = Object.keys(sortedList).length}
+    else { end = 13};
+    for (let i = 3; i < end; i=i+1){
         ExtraList.push(sortedList[i].value);
     }
-    let ExtraString = ExtraList.join("','");
+    let ExtraString = ExtraList.join('","');
     return ExtraString
 }
 async function getImageFromKeywordExtra(VisitorID,ExtraString,limit = 0,distance = 1000) {
@@ -263,7 +265,7 @@ async function getImageFromKeywordExtra(VisitorID,ExtraString,limit = 0,distance
                 SELECT object_id,COUNT(*) AS count
                 FROM object_keyword_relation okr
                 JOIN keyword k ON okr.keyword_id = k.id
-                WHERE k.value IN ('${ExtraString}') -- values to filter
+                WHERE k.value IN ("${ExtraString}") -- values to filter
                 GROUP BY okr.object_id
                 ORDER BY okr.object_id) AS okrc
             JOIN object_description od ON okrc.object_id = od.id
@@ -338,7 +340,7 @@ async function getRecommedImage(Visitor_ID,limit,distance){
     })
 }
 
-async function getRecommedImage_Objcode(objcode,limit,distance){
+async function getRecommedImage_Objcode(Visitor_ID,objcode,limit,distance){
     get_keyword_and_score_objcode(objcode)
     .then(result => {
         let unsorted = getunsortedkeyword(result);
