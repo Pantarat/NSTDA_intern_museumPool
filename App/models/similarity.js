@@ -1,4 +1,5 @@
 const sql_tool = require('./mysql_tools');
+const top = require('./topKeyword');
 const dbconfig = require('../config/db');
 const dbogCon = dbconfig.dbogCon;
 const dbupdCon = dbconfig.dbupdCon;
@@ -185,53 +186,9 @@ async function getSimilarObject_Code(visitor_id, limit = 20) {
 async function getRecommedImage(visitor_id, limit = 20, distance = 1000) {
     let mostCommonObject = await getSimilarObject_Code(visitor_id);
     return new Promise((resolve, reject) => {
-        let mostCommonObjectArr = mostCommonObject.map(x => { return x[0] });
-        let queryString = ` SELECT od.id,od.image,(
-            -- for the distance
-            111.111 *
-            DEGREES(ACOS(LEAST(1.0, COS(RADIANS(od.place_latitude))
-             * COS(RADIANS(mostrecent.place_latitude))
-             * COS(RADIANS(od.place_longtitude - mostrecent.place_longtitude))
-             + SIN(RADIANS(od.place_latitude))
-             * SIN(RADIANS(mostrecent.place_latitude)))))) AS distance_in_km
-             -- for the distance
-            FROM object_description od
-            JOIN visitor_log v ON od.object_code = v.Object_Code
-            JOIN (
-                SELECT Object_Code,place_latitude,place_longtitude
-                FROM object_description
-                WHERE Object_Code =
-                    (SELECT Object_Code
-                    from visitor_log
-                    where Visitor_ID=${visitor_id}
-                    group by Object_Code
-                    order by max(VisitorLog_UpdDate) DESC Limit 1)) AS mostrecent
-            WHERE od.object_code NOT IN(
-                SELECT object_code
-                FROM visitor_log
-                WHERE Visitor_ID = ${visitor_id} -- filter out objects thats already seen
-                )
-            AND
-                (v.VisitorLog_UpdDate
-                BETWEEN DATE(NOW() - INTERVAL 6 MONTH)
-                AND DATE(NOW()))
-            AND od.Object_Code IN (${mostCommonObjectArr})
-            GROUP BY od.id
-            -- for the distance
-            HAVING distance_in_km < ${distance}
-            -- for the distance
-            ORDER BY distance_in_km ASC
-            LIMIT ${limit}`;
-
-        dbupdCon.query(queryString, (err, result) => {
-            if (err) {
-                reject(err);
-            }
-            else {
-                console.log(JSON.parse(JSON.stringify(result)));
-                resolve(result);
-            }
-        })
+        let mostCommonObjectArr = mostCommonObject.map(x => { return "'"+x[0]+"'" });
+        top.getRecommedImage_Objcode(mostCommonObjectArr,10,50);
+        
     })
 }
 

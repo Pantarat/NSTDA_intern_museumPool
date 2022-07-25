@@ -26,6 +26,25 @@ async function get_keyword_and_score(Visitor_ID) {
         })
     })
 }
+async function get_keyword_and_score_objcode(codeList) {
+    return new Promise((resolve, reject) => {
+        let queryString = `
+        SELECT k.value, okr.score
+        FROM ${process.env.UPDATEDDB}.object_description od
+        JOIN ${process.env.UPDATEDDB}.object_keyword_relation okr ON od.id = okr.object_id
+        JOIN ${process.env.UPDATEDDB}.keyword k ON okr.keyword_id = k.id
+        WHERE od.object_code IN (${codeList}) -- object codes in here
+        `;
+        console.log(queryString);
+        dbogCon.query(queryString, (error, results, fields) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(JSON.parse(JSON.stringify(results)));
+            }
+        })
+    })
+}
 
 /* input of getmax
  let data = [
@@ -318,6 +337,39 @@ async function getRecommedImage(Visitor_ID,limit,distance){
     }
     })
 }
+
+async function getRecommedImage_Objcode(objcode,limit,distance){
+    get_keyword_and_score_objcode(objcode)
+    .then(result => {
+        let unsorted = getunsortedkeyword(result);
+        //console.log('maxvalue',unsorted);
+        if(Object.keys(unsorted)[0] == 'message'){
+            console.log(unsorted['message']);
+            
+        }else{
+            let sorted =sortList(unsorted);
+            //console.log('sorted',sorted)
+            let topkey = getTopKeyword(sorted);
+            getImageFromKeyword(Visitor_ID,topkey,5,distance).then((first)=>{
+            let needMore = limit-Object.keys(first).length;
+            let firstpart = first;
+            if(Object.keys(first).length >= limit){
+                console.log("First",first,Object.keys(first).length);
+            }else{
+                //console.log("firstpart",firstpart,Object.keys(firstpart).length,typeof firstpart);
+                let extra = ExtraKey(sorted);
+                getImageFromKeywordExtra(Visitor_ID,extra,needMore,distance).then((extra)=>{
+                //console.log("ex",extra,Object.keys(extra).length,typeof extra);
+                let complete = [...firstpart,...extra];
+                console.log("co",complete,Object.keys(complete).length,typeof complete);
+                return complete;
+            })
+        }
+        
+        })
+    }
+    })
+}
 var allexports = {};
 allexports.get_keyword_and_score = get_keyword_and_score;
 allexports.getunsortedkeyword = getunsortedkeyword;
@@ -326,4 +378,6 @@ allexports.getTopKeyword = getTopKeyword;
 allexports.getRecommedImage = getRecommedImage;
 allexports.getImageFromKeywordExtra=getImageFromKeywordExtra;
 allexports.ExtraKey=ExtraKey;
+allexports.getRecommedImage_Objcode=getRecommedImage_Objcode;
+allexports.get_keyword_and_score_objcode=get_keyword_and_score_objcode;
 module.exports = allexports;
